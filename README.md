@@ -25,7 +25,7 @@ Expected: both smoke tests pass (`/hello` and `/health`).
 ### 3) Start the app locally
 
 ```bash
-python -m wsgiref.simple_server --host 127.0.0.1 --port 8000 potts_spaces.app:app
+python -c "from wsgiref.simple_server import make_server; from potts_spaces.app import app; make_server('127.0.0.1', 8000, app).serve_forever()"
 ```
 
 ### 4) Verify endpoints
