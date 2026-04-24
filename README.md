@@ -22,13 +22,13 @@ pytest
 The application is a WSGI-compliant Python app. To run it locally for development:
 
 ```bash
-python -m wsgiref.simple_server src.app:application
+python -c "from wsgiref.simple_server import make_server; from src.app import application; make_server('localhost', 8000, application).serve_forever()"
 ```
 
 Or with a custom port:
 
 ```bash
-python -c "from wsgiref.simple_server import make_server; from app import application; make_server('localhost', 8000, application).serve_forever()"
+python -c "from wsgiref.simple_server import make_server; from src.app import application; make_server('localhost', 9000, application).serve_forever()"
 ```
 
 This will start a development server on `http://localhost:8000`.
