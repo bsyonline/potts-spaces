@@ -17,6 +17,15 @@ def application(environ: dict, start_response: StartResponse) -> Iterable[bytes]
         start_response("200 OK", headers)
         return [payload]
 
+    if method == "GET" and path == "/health":
+        payload = json.dumps({"status": "healthy"}).encode("utf-8")
+        headers = [
+            ("Content-Type", "application/json"),
+            ("Content-Length", str(len(payload))),
+        ]
+        start_response("200 OK", headers)
+        return [payload]
+
     payload = json.dumps({"error": "not found"}).encode("utf-8")
     headers = [
         ("Content-Type", "application/json"),
