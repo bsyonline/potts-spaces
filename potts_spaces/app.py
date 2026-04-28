@@ -1,4 +1,5 @@
 from wsgiref.util import setup_testing_defaults
+import json
 
 
 def app(environ, start_response):
@@ -10,6 +11,17 @@ def app(environ, start_response):
             "200 OK",
             [
                 ("Content-Type", "text/plain; charset=utf-8"),
+                ("Content-Length", str(len(body))),
+            ],
+        )
+        return [body]
+
+    if environ.get("PATH_INFO") == "/health":
+        body = json.dumps({"status": "ok"}).encode("utf-8")
+        start_response(
+            "200 OK",
+            [
+                ("Content-Type", "application/json"),
                 ("Content-Length", str(len(body))),
             ],
         )

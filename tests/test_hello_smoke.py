@@ -32,3 +32,13 @@ def test_hello_endpoint_smoke():
     assert status == "200 OK"
     assert headers["Content-Type"].startswith("text/plain")
     assert body == b"hello"
+
+
+def test_health_endpoint():
+    status, headers, body = _call_app("/health")
+
+    assert status == "200 OK"
+    assert headers["Content-Type"] == "application/json"
+    import json
+    data = json.loads(body)
+    assert data["status"] == "ok"
