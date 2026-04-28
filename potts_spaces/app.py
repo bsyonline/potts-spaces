@@ -17,7 +17,7 @@ def app(environ, start_response):
         return [body]
 
     if environ.get("PATH_INFO") == "/health":
-        body = json.dumps({"status": "ok"}).encode("utf-8")
+        body = json.dumps({"status": "healthy"}).encode("utf-8")
         start_response(
             "200 OK",
             [

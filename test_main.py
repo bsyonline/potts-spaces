@@ -13,3 +13,27 @@ def test_hello_endpoint_returns_message():
     client = TestClient(app)
     response = client.get("/hello")
     assert "message" in response.json()
+
+
+def test_health_endpoint_returns_200():
+    client = TestClient(app)
+    response = client.get("/health")
+    assert response.status_code == 200
+
+
+def test_health_endpoint_returns_status():
+    client = TestClient(app)
+    response = client.get("/health")
+    assert response.json() == {"status": "healthy"}
+
+
+def test_health_endpoint_returns_200():
+    client = TestClient(app)
+    response = client.get("/health")
+    assert response.status_code == 200
+
+
+def test_health_endpoint_returns_status():
+    client = TestClient(app)
+    response = client.get("/health")
+    assert response.json()["status"] == "healthy"

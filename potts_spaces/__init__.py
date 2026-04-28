@@ -1,1 +1,0 @@
-"""Potts Spaces - A space management application."""
