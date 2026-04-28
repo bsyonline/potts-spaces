@@ -41,4 +41,4 @@ def test_health_endpoint():
     assert headers["Content-Type"] == "application/json"
     import json
     data = json.loads(body)
-    assert data["status"] == "ok"
+    assert data["status"] == "healthy"

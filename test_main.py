@@ -21,19 +21,7 @@ def test_health_endpoint_returns_200():
     assert response.status_code == 200
 
 
-def test_health_endpoint_returns_status():
-    client = TestClient(app)
-    response = client.get("/health")
-    assert response.json() == {"status": "healthy"}
-
-
-def test_health_endpoint_returns_200():
-    client = TestClient(app)
-    response = client.get("/health")
-    assert response.status_code == 200
-
-
-def test_health_endpoint_returns_status():
+def test_health_endpoint_returns_healthy_status():
     client = TestClient(app)
     response = client.get("/health")
     assert response.json()["status"] == "healthy"
