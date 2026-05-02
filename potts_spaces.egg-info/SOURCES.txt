@@ -1,6 +1,0 @@
-setup.py
-potts_spaces.egg-info/PKG-INFO
-potts_spaces.egg-info/SOURCES.txt
-potts_spaces.egg-info/dependency_links.txt
-potts_spaces.egg-info/top_level.txt
-tests/test_health.py
