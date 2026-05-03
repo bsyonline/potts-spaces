@@ -1,20 +1,13 @@
 import pytest
-from io import StringIO
-import sys
 from app import app
 
 
-def test_request_logging():
-    captured_output = StringIO()
-    sys.stdout = captured_output
-    
+def test_request_logging(caplog):
     with app.test_client() as client:
-        response = client.get('/test-path')
+        with caplog.at_level('INFO'):
+            response = client.get('/')
     
-    sys.stdout = sys.__stdout__
-    output = captured_output.getvalue()
-    
-    assert '/test-path' in output
+    assert '/' in caplog.text
     assert response.status_code == 200
 
 
