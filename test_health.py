@@ -10,6 +10,8 @@ def client():
 
 
 def test_health_endpoint_returns_200(client):
-    """Test that /health endpoint returns HTTP 200."""
+    """Test that /health endpoint returns HTTP 200 with proper JSON response."""
     response = client.get('/health')
     assert response.status_code == 200
+    assert response.json == {'status': 'ok'}
+    assert response.content_type == 'application/json'
