@@ -17,6 +17,7 @@ def json_response(payload, status=200):
 
 class PottsSpacesHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        print(f"Request path: {self.path}")
         status, headers, body = handle_request(self.path)
 
         self.send_response(status)
