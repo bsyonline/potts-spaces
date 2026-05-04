@@ -1,0 +1,1 @@
+"""Potts Spaces application package."""
