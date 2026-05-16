@@ -1,5 +1,6 @@
 import time
-from flask import Flask, request, jsonify
+import uuid
+from flask import Flask, request, jsonify, g
 
 app = Flask(__name__)
 START_TIME = time.time()
@@ -8,8 +9,18 @@ BUILD = 'development'
 
 
 @app.before_request
-def log_request():
-    print(request.path)
+def handle_request_tracing():
+    request_id = request.headers.get('X-Request-ID')
+    if not request_id:
+        request_id = str(uuid.uuid4())
+    g.request_id = request_id
+    print(f'{g.request_id} {request.path}')
+
+
+@app.after_request
+def add_request_id_header(response):
+    response.headers['X-Request-ID'] = g.request_id
+    return response
 
 
 def get_uptime_seconds():
