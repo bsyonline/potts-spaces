@@ -39,12 +39,14 @@ class TestLiveEndpoint:
         assert data['uptime_seconds'] >= 0
 
     def test_live_uptime_seconds_is_approximate(self, client):
-        before = time.time()
-        response = client.get('/live')
-        after = time.time()
-        data = response.get_json()
-        elapsed = after - before
-        assert abs(data['uptime_seconds'] - elapsed) < 1.0
+        response1 = client.get('/live')
+        uptime1 = response1.get_json()['uptime_seconds']
+        time.sleep(0.1)
+        response2 = client.get('/live')
+        uptime2 = response2.get_json()['uptime_seconds']
+        delta = uptime2 - uptime1
+        assert delta >= 0.1
+        assert delta < 0.2
 
 
 class TestReadyEndpoint:
