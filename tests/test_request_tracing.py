@@ -83,27 +83,34 @@ def test_concurrent_requests_have_different_ids():
 
 
 def test_request_ids_do_not_leak_between_concurrent_requests():
-    captured_ids = {}
+    start_event = threading.Event()
+    continue_event = threading.Event()
+    request_ids_during_overlap = {}
     
-    def slow_request(thread_id, captured_ids):
+    def overlapping_request(thread_id, request_ids_during_overlap):
         app.config['TESTING'] = True
         with app.test_client() as client:
+            start_event.wait()
             response = client.get('/health')
-            captured_ids[thread_id] = response.headers.get('X-Request-ID')
-            time.sleep(0.1)
+            captured_id = response.headers.get('X-Request-ID')
+            request_ids_during_overlap[thread_id] = captured_id
+            continue_event.wait()
     
     threads = []
     for i in range(5):
-        t = threading.Thread(target=slow_request, args=(i, captured_ids))
+        t = threading.Thread(target=overlapping_request, args=(i, request_ids_during_overlap))
         threads.append(t)
-    
-    for t in threads:
         t.start()
+    
+    start_event.set()
+    time.sleep(0.05)
+    ids_at_overlap_point = dict(request_ids_during_overlap)
+    continue_event.set()
     
     for t in threads:
         t.join()
     
-    ids = list(captured_ids.values())
+    ids = list(ids_at_overlap_point.values())
     assert len(ids) == 5
     assert len(set(ids)) == 5
 
