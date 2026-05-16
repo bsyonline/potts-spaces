@@ -1,11 +1,18 @@
 import time
 import uuid
+import threading
+import hashlib
 from flask import Flask, request, jsonify, g
 
 app = Flask(__name__)
 START_TIME = time.time()
 VERSION = '1.0.0'
 BUILD = 'development'
+
+idempotency_store = {}
+idempotency_lock = threading.Lock()
+resources_store = {}
+resources_lock = threading.Lock()
 
 
 @app.before_request
@@ -53,3 +60,54 @@ def ready():
         'app': 'ok'
     }
     return jsonify(response), 200
+
+
+def compute_payload_hash(payload):
+    if payload is None:
+        return ''
+    return hashlib.sha256(str(payload).encode()).hexdigest()
+
+
+@app.route('/resources', methods=['POST'])
+def create_resource():
+    data = request.get_json() or {}
+    idempotency_key = request.headers.get('X-Idempotency-Key')
+    
+    if not idempotency_key:
+        resource_id = str(uuid.uuid4())
+        with resources_lock:
+            resources_store[resource_id] = {
+                'id': resource_id,
+                'name': data.get('name'),
+                'data': data.get('data')
+            }
+        return jsonify({'id': resource_id, 'name': data.get('name'), 'data': data.get('data')}), 201
+    
+    payload_hash = compute_payload_hash(data)
+    
+    with idempotency_lock:
+        existing = idempotency_store.get(idempotency_key)
+        
+        if existing:
+            if existing['payload_hash'] == payload_hash:
+                return jsonify(existing['response']), 201
+            else:
+                return jsonify({'error': 'Idempotency conflict: same key with different payload'}), 409
+        
+        resource_id = str(uuid.uuid4())
+        response_data = {
+            'id': resource_id,
+            'name': data.get('name'),
+            'data': data.get('data')
+        }
+        
+        idempotency_store[idempotency_key] = {
+            'payload_hash': payload_hash,
+            'response': response_data,
+            'resource_id': resource_id
+        }
+        
+        with resources_lock:
+            resources_store[resource_id] = response_data
+    
+    return jsonify(response_data), 201
