@@ -76,3 +76,37 @@ class TestConfigReload:
             assert 'field' in error
             assert 'message' in error
             assert 'expected' in error or 'constraint' in error
+
+    def test_config_manager_rollback_restores_previous_config(self):
+        manager = ConfigManager()
+        original_config = manager.get_config()
+        new_config = {'max_requests_per_second': 999, 'timeout_seconds': 99}
+        manager.reload_config(new_config)
+        assert manager.get_config()['max_requests_per_second'] == 999
+        manager.rollback(original_config)
+        assert manager.get_config() == original_config
+
+    def test_config_manager_rollback_thread_safe(self):
+        manager = ConfigManager()
+        original_config = manager.get_config()
+        new_config = {'max_requests_per_second': 500, 'timeout_seconds': 50}
+        manager.reload_config(new_config)
+        errors = []
+
+        def concurrent_rollback():
+            try:
+                for _ in range(20):
+                    manager.rollback(original_config)
+                    manager.reload_config(new_config)
+            except Exception as e:
+                errors.append(str(e))
+
+        threads = [threading.Thread(target=concurrent_rollback) for _ in range(3)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert len(errors) == 0, f'Thread safety errors: {errors}'
+        final_config = manager.get_config()
+        assert 'max_requests_per_second' in final_config

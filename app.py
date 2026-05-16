@@ -43,7 +43,6 @@ class ConfigManager:
         if errors:
             return False, errors
         with self._lock:
-            old_config = copy.deepcopy(self._config)
             self._config = copy.deepcopy(new_config)
         return True, None
         
