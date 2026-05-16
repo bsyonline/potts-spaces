@@ -39,7 +39,8 @@ def test_idempotent_create_conflict_for_same_key_different_payload(client):
     
     assert response1.status_code == 201
     assert response2.status_code == 409
-    assert 'conflict' in response2.json['error'].lower()
+    assert 'conflict' in response2.json['message'].lower()
+    assert response2.json['code'] == 'IDEMPOTENCY_CONFLICT'
 
 
 def test_create_without_idempotency_key_creates_new_resource(client):
