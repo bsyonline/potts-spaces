@@ -30,3 +30,65 @@ def test_request_logging_logs_incoming_path(client):
     log_contents = log_stream.getvalue()
     assert '/health' in log_contents
     assert 'Request' in log_contents or 'request' in log_contents
+
+
+def test_live_endpoint_returns_json_with_required_fields(client):
+    response = client.get('/live')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert 'status' in data
+    assert 'uptime_seconds' in data
+    assert 'version' in data
+    assert 'build' in data
+
+
+def test_live_endpoint_field_types(client):
+    response = client.get('/live')
+    data = response.get_json()
+    assert isinstance(data['status'], str)
+    assert isinstance(data['uptime_seconds'], (int, float))
+    assert isinstance(data['version'], str)
+    assert isinstance(data['build'], str)
+
+
+def test_live_endpoint_status_is_alive(client):
+    response = client.get('/live')
+    data = response.get_json()
+    assert data['status'] == 'alive'
+
+
+def test_live_endpoint_uptime_is_positive(client):
+    response = client.get('/live')
+    data = response.get_json()
+    assert data['uptime_seconds'] >= 0
+
+
+def test_ready_endpoint_returns_json_with_required_fields(client):
+    response = client.get('/ready')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert 'status' in data
+    assert 'uptime_seconds' in data
+    assert 'version' in data
+    assert 'build' in data
+
+
+def test_ready_endpoint_field_types(client):
+    response = client.get('/ready')
+    data = response.get_json()
+    assert isinstance(data['status'], str)
+    assert isinstance(data['uptime_seconds'], (int, float))
+    assert isinstance(data['version'], str)
+    assert isinstance(data['build'], str)
+
+
+def test_ready_endpoint_status_when_dependencies_ok(client):
+    response = client.get('/ready')
+    data = response.get_json()
+    assert data['status'] in ['ready', 'not_ready']
+
+
+def test_health_endpoint_remains_compatible(client):
+    response = client.get('/health')
+    assert response.status_code == 200
+    assert response.data == b'OK'
