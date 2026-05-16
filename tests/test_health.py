@@ -88,6 +88,20 @@ def test_ready_endpoint_status_when_dependencies_ok(client):
     assert data['status'] in ['ready', 'not_ready']
 
 
+def test_ready_endpoint_returns_not_ready_when_dependencies_fail(client):
+    import app as app_module
+    original_deps_ok = app_module.DEPENDENCIES_OK
+    app_module.DEPENDENCIES_OK = False
+    
+    response = client.get('/ready')
+    
+    app_module.DEPENDENCIES_OK = original_deps_ok
+    
+    assert response.status_code == 503
+    data = response.get_json()
+    assert data['status'] == 'not_ready'
+
+
 def test_health_endpoint_remains_compatible(client):
     response = client.get('/health')
     assert response.status_code == 200

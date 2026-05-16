@@ -8,6 +8,8 @@ start_time = time.time()
 VERSION = '1.0.0'
 BUILD = 'local'
 
+DEPENDENCIES_OK = True
+
 def get_health_metadata():
     uptime = time.time() - start_time
     return {
@@ -16,6 +18,9 @@ def get_health_metadata():
         'version': VERSION,
         'build': BUILD
     }
+
+def check_dependencies():
+    return DEPENDENCIES_OK
 
 @app.before_request
 def log_request():
@@ -32,5 +37,9 @@ def live_check():
 @app.route('/ready')
 def ready_check():
     metadata = get_health_metadata()
-    metadata['status'] = 'ready'
-    return jsonify(metadata), 200
+    if check_dependencies():
+        metadata['status'] = 'ready'
+        return jsonify(metadata), 200
+    else:
+        metadata['status'] = 'not_ready'
+        return jsonify(metadata), 503
