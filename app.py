@@ -1,6 +1,8 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g, Response
 import logging
 import time
+import uuid
+import json
 
 app = Flask(__name__)
 logger = logging.getLogger('app')
@@ -22,9 +24,31 @@ def get_health_metadata():
 def check_dependencies():
     return DEPENDENCIES_OK
 
+def get_request_id():
+    upstream_id = request.headers.get('X-Request-ID')
+    if upstream_id:
+        return upstream_id
+    return str(uuid.uuid4())
+
+@app.before_request
+def set_request_id():
+    g.request_id = get_request_id()
+
 @app.before_request
 def log_request():
-    logger.info(f'Request path: {request.path}')
+    request_id = getattr(g, 'request_id', 'unknown')
+    logger.info(json.dumps({
+        'event': 'request',
+        'path': request.path,
+        'request_id': request_id
+    }))
+
+@app.after_request
+def add_request_id_header(response: Response) -> Response:
+    request_id = getattr(g, 'request_id', None)
+    if request_id:
+        response.headers['X-Request-ID'] = request_id
+    return response
 
 @app.route('/health')
 def health_check():
