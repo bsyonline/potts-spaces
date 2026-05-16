@@ -2,6 +2,8 @@ import time
 import uuid
 import threading
 import hashlib
+import logging
+import traceback
 from flask import Flask, request, jsonify, g
 
 app = Flask(__name__)
@@ -9,10 +11,21 @@ START_TIME = time.time()
 VERSION = '1.0.0'
 BUILD = 'development'
 
+logger = logging.getLogger(__name__)
+
 idempotency_store = {}
 idempotency_lock = threading.Lock()
 resources_store = {}
 resources_lock = threading.Lock()
+
+
+def make_error_response(code, message, status_code):
+    error_data = {
+        'code': code,
+        'message': message,
+        'request_id': g.request_id
+    }
+    return jsonify(error_data), status_code
 
 
 @app.before_request
@@ -92,7 +105,11 @@ def create_resource():
             if existing['payload_hash'] == payload_hash:
                 return jsonify(existing['response']), 201
             else:
-                return jsonify({'error': 'Idempotency conflict: same key with different payload'}), 409
+                return make_error_response(
+                    'IDEMPOTENCY_CONFLICT',
+                    'Idempotency conflict: same key with different payload',
+                    409
+                )
         
         resource_id = str(uuid.uuid4())
         response_data = {
@@ -111,3 +128,14 @@ def create_resource():
             resources_store[resource_id] = response_data
     
     return jsonify(response_data), 201
+
+
+@app.errorhandler(404)
+def handle_not_found(error):
+    return make_error_response('NOT_FOUND', 'Resource not found', 404)
+
+
+@app.errorhandler(400)
+def handle_bad_request(error):
+    logger.error(f'Bad request error: {error}\n{traceback.format_exc()}')
+    return make_error_response('BAD_REQUEST', 'Invalid request payload', 400)
